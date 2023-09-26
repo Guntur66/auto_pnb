@@ -1,0 +1,171 @@
+-- variable declarations
+pnbWorld = "surgpack1wi"
+pnbID = "kcg1802" -- id door pnb
+takeWorld = "kucingmassberak"
+takeWorldID = "kcg1802"
+
+dropSeed = "kucingmassberak"
+dropSeedID = "kcg1802"
+IDdropSeed = 3
+
+-- pnb setting
+IDblock = 2
+IDseed = 3
+
+pnbX = 50
+pnbY = 50
+
+delayPlace = 190
+delayHit = 90
+
+hit_count = 3
+
+trashList = {5024, 5026, 5028, 5030, 5030, 5032, 5034, 5036, 5038, 5040, 5042, 5044, 7164, 7162}
+
+-- get bot instance
+bot = getBot()
+
+-- function declarations
+function collect(trueFalse, range, interval)
+    bot.auto_collect = trueFalse
+    bot.collect_range = range
+    bot.collect_interval = interval
+end
+
+function warps(world, id)
+    while bot:getWorld().name ~= world:upper() do
+        sleep(500)
+        bot:warp(world .. "|" .. id)
+    end
+    sleep(5000)
+    if bot:getTiles(math.floor(bot:getLocal().pos.x / 32), math.floor(bot:getLocal().pos.y / 32)).fg == 6 then
+        sleep(500)
+        bot:warp(world .. "|" .. id)
+        sleep(5000)
+    end
+end
+
+function take()
+    for i, object in pairs(bot:getObjects()) do
+        sleep(500)
+        if object.id == IDblock then
+            local posx = math.floor(object.pos.x / 32)
+            local posy = math.floor(object.pos.y / 32)
+            sleep(500)
+            if bot:isInTile(posx, posy) then
+                sleep(50)
+                bot:collectObject(object.id)
+            else
+                if bot:findPath(posx, posy) then
+                    sleep(50)
+                    bot:collectObject(object.id)
+                end
+            end
+            sleep(50)
+        end
+    end
+end
+
+function drop(B)
+    if bot:getItemCount(B) > 180 and bot:inWorld() then
+        bot:drop(B)
+        sleep(1500)
+    end
+end
+
+function dropSeeds(B)
+    if bot:getWorld():upper() ~= dropSeed:upper() then
+        warps(dropSeed, dropSeedID)
+        sleep(4500)
+    end
+end
+
+function trashItems()
+    for d, T in pairs(trashList) do
+        if bot:getInventory():getLocalCount(T) > 180 then
+            trash(T)
+            sleep(500)
+        end
+    end
+end
+
+function hit(x, y)
+    bot:hit(bot:getLocal().pos.x + x, bot:getLocal().pos.y + y, IDseed)
+end
+
+function place(x, y)
+    bot:place(bot:getLocal().pos.x + x, bot:getLocal().pos.y + y, IDblock)
+end
+
+function pnb()
+    collect(true, 3, 50)
+    repeat
+        sleep(2000)
+        posX = math.floor(bot:getLocal().pos.x / 32)
+        posY = math.floor(bot:getLocal().pos.y / 32)
+        if bot:getItemCount(IDblock) > 0 then
+            if bot:getItemCount(IDseed) > 150 then
+                goto a
+            end
+            if bot:getTile(posX - 1, posY - 1).bg == 0 or bot:getTile(posX - 1, posY - 1).fg == 0 then
+                place(-1, -1)
+                sleep(delayPlace)
+            end
+            if bot:getTile(posX, posY - 1).bg == 0 or bot:getTile(posX + 1, posY - 1).fg == 0 then
+                place(0, -1)
+                sleep(delayPlace)
+            end
+            if bot:getTile(posX + 1, posY - 1).bg == 0 or bot:getTile(posX + 1, posY - 1).fg == 0 then
+                place(IDblock, 1, -1)
+                sleep(delayPlace)
+            end
+        end
+        for i = 0, hit_count, 1 do
+            if bot:getTile(posX - 1, posY - 1).bg ~= 0 or bot:getTile(posX - 1, posY - 1).fg ~= 0 then
+                hit(-1, -1)
+                sleep(delayHit)
+            end
+            if bot:getTile(posX, posY - 1).bg ~= 0 or bot:getTile(posX, posY - 1).fg ~= 0 then
+                hit(0, -1)
+                sleep(delayHit)
+            end
+            if bot:getTile(posX + 1, posY - 1).bg ~= 0 or bot:getTile(posX + 1, posY - 1).fg ~= 0 then
+                hit(1, -1)
+                sleep(delayHit)
+            end
+        end
+        ::a::
+    until bot:getItemCount(IDblock) == 0
+    drop(IDseed)
+    sleep(1000)
+end
+
+-- main loop
+while true do
+    if bot:getItemCount(IDseed) > 180 then
+        Collect(false, 3, 50)
+        sleep(1000)
+        dropSeeds(IDseed)
+        sleep(1000)
+        warps(pnbWorld, pnbID)
+        sleep(1000)
+        pnb()
+    end
+    if bot:getItemCount(IDblock) == 0 then
+        sleep(1000)
+        warps(takeWorld, takeWorldID)
+        sleep(500)
+        take()
+        sleep(500)
+        warps(pnbWorld, pnbID)
+        sleep(1000)
+        pnb()
+    end
+    if bot:getItemCount(IDblock) > 0 then
+        warps(pnbWorld, pnbID)
+        sleep(1000)
+        pnb()
+    end
+    -- Trash items
+    trash(trashList)
+end
