@@ -1,11 +1,11 @@
 -- variable declarations
-pnbWorld = "surgpack1wi"
-pnbID = "kcg1802" -- id door pnb
-takeWorld = "kucingmassberak"
-takeWorldID = "kcg1802"
+pnbWorld = ""
+pnbID = "" -- id door pnb
+takeWorld = ""
+takeWorldID = ""
 
-dropSeed = "kucingmassberak"
-dropSeedID = "kcg1802"
+dropSeed = ""
+dropSeedID = ""
 IDdropSeed = 3
 
 -- pnb setting
